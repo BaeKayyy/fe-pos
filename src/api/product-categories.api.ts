@@ -6,10 +6,18 @@ export const getCategories =(params?: {
     limit?:number
 }) => api.get('product-categories', {params})
 
+
+export const getCategory = (id: number) => api.get(`/product-categories/${id}`)
+
 export const createCategory =  (payload: {
     name: string
     description?: string
 }) => api.post('/product-categories', payload)
+
+export const updateCategory =  (
+    id: number,
+    payload: { name: string , description?: string}) => api.put(`/product-categories/${id}`, payload)
+
 
 export const uploadCategoryImage = (id: number, formData: FormData) =>{
     api.post(`/product-categories/${id}/image`, formData,{

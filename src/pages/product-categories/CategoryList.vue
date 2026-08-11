@@ -5,6 +5,7 @@ import { storeToRefs } from 'pinia';
 import { onMounted } from 'vue';
 import { useDebounceFn } from '@vueuse/core';
 import { deleteCategory } from '@/api/product-categories.api';
+import { RouterLink } from 'vue-router';
 
 
 const productCategoryStore = useProductCategoryStore();
@@ -106,7 +107,15 @@ onMounted(() => {
                 <Column field="description" header="Description"></Column>
                 <Column header="Actions" style="width: 5rem;">
                     <template #body=" { data }">
-                        <Button icon="pi pi-trash" text rounded severity="danger" class="w-9! h-9! border-surface-200! text-surface-200! hover:text-primary-600! hover:border-primary-500 hover:bg-primary-50! bg-white" @click="confirmDelete(data.id)"/>
+                        <div class="flex items-center gap">
+                            <RouterLink :to="{ name: 'product-categories-edit', params: { id: data.id} }">
+                                <Button icon="pi pi-pencil" text rounded severity="primary" class="w-9! h-9! border-surface-200! text-surface-200! hover:text-primary-600! hover:border-primary-500 hover:bg-primary-50! bg-white" @click="confirmDelete(data.id)"/>
+                            </RouterLink>
+                            
+                            
+                            
+                            <Button icon="pi pi-trash" text rounded severity="danger" class="w-9! h-9! border-surface-200! text-surface-200! hover:text-primary-600! hover:border-primary-500 hover:bg-primary-50! bg-white" @click="confirmDelete(data.id)"/>
+                        </div>
                     </template>
                 </Column>
             </DataTable>

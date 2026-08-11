@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { createCategory, uploadCategoryImage } from '@/api/product-categories.api';
+import { createCategory, getCategory, updateCategory, uploadCategoryImage } from '@/api/product-categories.api';
 import router from '@/router';
 import { Button, FileUpload, InputText, Message, Textarea, useToast } from 'primevue';
-import { computed, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
 
 
@@ -42,9 +42,12 @@ const submit = async () => {
     loading.value =true
     
     try {
-       const res = await createCategory(form.value)
-       
-       form.value.id = res.data.data.id
+       if(isEdit.value) {
+        await updateCategory(form.value.id, form.value)
+       }else{
+            const res = await createCategory(form.value)
+            form.value.id = res.data.data.id
+       }
         
        if(selectedFile.value){
         const fd = new FormData()
@@ -55,7 +58,7 @@ const submit = async () => {
         toast.add({
             severity: "success",
             summary: "Success",
-            detail: "Category created succesfully",
+            detail: isEdit.value ? "Category update successfully": "Category created successfully",
             life: 3000
         })
         router.push('/product-categories')
@@ -75,6 +78,30 @@ const submit = async () => {
        loading.value = false
     }
 }
+
+onMounted(async () =>{
+    if(!isEdit) return
+    loading.value = true
+    
+    try {
+        const res = await getCategory(categoryId.value!)
+        const data = res.data.data
+        
+        form.value.id = data.id
+        form.value.name = data.name
+        form.value.description = data.description ?? ""
+        imagePreview.value = data.image ?? ""
+    } catch (error) {
+        toast.add({
+            severity: "error",
+            summary: "Error",
+            detail: "Failed to load category",
+            life: 3000
+        })
+    } finally{
+        loading.value = false
+    }
+})
 
 </script>
 
