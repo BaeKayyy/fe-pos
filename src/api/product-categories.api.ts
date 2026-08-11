@@ -5,3 +5,5 @@ export const getCategories =(params?: {
     search?: string
     limit?:number
 }) => api.get('product-categories', {params})
+
+export const deleteCategory = (id: number) => api.delete(`/product-categories/${id}`)

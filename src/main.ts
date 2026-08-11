@@ -3,6 +3,9 @@ import { createPinia } from 'pinia'
 import PrimeVue from 'primevue/config';
 import Aura from '@primeuix/themes/aura';
 import { definePreset } from '@primeuix/themes';
+import { ConfirmationService, ToastService} from 'primevue';
+
+
 
 import './assets/main.css'
 
@@ -13,6 +16,7 @@ const app = createApp(App)
 
 app.use(createPinia())
 app.use(router)
+
 
 const FlashPreset = definePreset(Aura, {
   semantic: {
@@ -61,3 +65,5 @@ app.use(PrimeVue,{
     }
 })
 app.mount('#app')
+app.use(ConfirmationService)
+app.use(ToastService)

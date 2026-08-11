@@ -1,17 +1,59 @@
-<script setup>
-import { Button, Column, DataTable, IconField, InputIcon, InputText, Select } from 'primevue';
+<script setup lang="ts">
+import { Button, Column, DataTable, IconField, InputIcon, InputText, Select, useConfirm, ConfirmDialog, useToast } from 'primevue';
 import { useProductCategoryStore } from '@/stores/product-category.store';
 import { storeToRefs } from 'pinia';
 import { onMounted } from 'vue';
 import { useDebounceFn } from '@vueuse/core';
+import { deleteCategory } from '@/api/product-categories.api';
+
 
 const productCategoryStore = useProductCategoryStore();
-const { fetch, setLimit, setPage, prevPage, nextPage } = productCategoryStore
+const { fetch, setLimit, setPage, prevPage, nextPage, } = productCategoryStore
 const { items, loading, limit, currentPage, totalPages, search } = storeToRefs(productCategoryStore)
+const confirm = useConfirm()
+const toast = useToast()
+
 
 const onSearch = useDebounceFn (()=>{
     setPage(1)
 }, 400)
+
+const confirmDelete = (id: number)=> {
+    confirm.require({
+        message: " Are you sure to delete this category",
+        header: "Confirm Delete",
+        icon: "pi pi-exclamation-triangle",
+        rejectProps:{
+            label: "Cancel",
+            severity: "Secondary",
+            outlined: true
+        },
+        acceptProps: {
+            label: "Delete",
+            severity: "danger"
+        },
+        accept: async () =>{
+            try {
+                await deleteCategory(id)
+                toast.add({
+                    severity: "success",
+                    summary: "Deleted",
+                    detail: "Category Removed",
+                    life: 3000
+                })
+                fetch()
+            } catch (error) {
+                toast.add({
+                    severity: "danger",
+                    summary: "Error",
+                    detail: "Failed to delete category",
+                    life: 3000
+                })
+            }
+        }
+    })
+}
+
 
 onMounted(() => {
     fetch()
@@ -32,7 +74,7 @@ onMounted(() => {
             </div>
             
             <Button asChild v-slot="slotProps">
-                <RouterLink  :class="slotProps.class">
+                <RouterLink  :class="slotProps.class" >
                     Add Category
                 </RouterLink>
             </Button>
@@ -64,7 +106,7 @@ onMounted(() => {
                 <Column field="description" header="Description"></Column>
                 <Column header="Actions" style="width: 5rem;">
                     <template #body=" { data }">
-                        <Button icon="pi pi-trash" text rounded severity="danger" class="w-9! h-9! border-surface-200! text-surface-200! hover:text-primary-600! hover:border-primary-500 hover:bg-primary-50! bg-white"></Button>
+                        <Button icon="pi pi-trash" text rounded severity="danger" class="w-9! h-9! border-surface-200! text-surface-200! hover:text-primary-600! hover:border-primary-500 hover:bg-primary-50! bg-white" @click="confirmDelete(data.id)"/>
                     </template>
                 </Column>
             </DataTable>
@@ -89,4 +131,6 @@ onMounted(() => {
            
         </div>
     </div>
+    
+    <ConfirmDialog/>
 </template>
