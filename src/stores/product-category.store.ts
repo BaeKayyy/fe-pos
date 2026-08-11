@@ -37,6 +37,12 @@ export const useProductCategoryStore = defineStore('productCategory',{
             } finally{
                 this.loading = false
             }
+        },
+        
+        setLimit(limit: number){
+            this.limit = limit
+            this.page= 1
+            this.fetch()
         }
     }
 })
