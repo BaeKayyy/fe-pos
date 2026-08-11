@@ -1,18 +1,40 @@
 <script setup lang="ts">
 
-import { Button, InputText } from 'primevue';
+import router from '@/router';
+import { useAuthStore } from '@/stores/auth.store';
+import { Button, InputText, Message } from 'primevue';
 import { ref } from 'vue';
 
+
+const auth = useAuthStore()
+const error = ref<string | null>(null) 
 const form = ref({
     email: '',
     password: ''
 })
 
+async function login() {
+    error.value = null
+    
+    if(!form.value.email || !form.value.password ){
+        error.value = "Email and Password are required"
+        return
+
+    }
+    
+    try {
+        await auth.login(form.value.email, form.value.password )
+        router.push({ name: 'dashboard'})
+    } catch (e) {
+        error.value = 'invalid email or password'
+    }
+}
+
 </script>
 
 <template>
         <div class="flex items-center justify-center min-h-screen bg-surface-50 px-4 py-10">
-            <div class="w-ful max-w-[590px] mx-auto">
+            <div class="w-ful max-w-147.5 mx-auto">
                 <div class="bg-white p-8 rounded-2xl shadow-xl border border-surface-100">
                     <!-- Header -->
                     <div class="text-center mb-8">
@@ -22,7 +44,9 @@ const form = ref({
                         <h1 class="text-2xl font-bold text-surface-900 mb-2">Welcome Back</h1>
                         <p class="text-surface-500">Please Sign in to your account</p>
                     </div> 
-                    <form action="" class="font-medium text-surface-900 flex flex-col gap-2">
+                    <form @submit.prevent="login" class="font-medium text-surface-900 flex flex-col gap-2">
+                        <Message v-if="error" severity="error" :closable="false">{{ error }}</Message>
+                        
                         <!-- Email -->
                         <div class="flex flex-col gap-2">
                             <label for="email" class="font-medium text-surface-900">
@@ -34,7 +58,7 @@ const form = ref({
                         type="text"
                         placeholder="nama@gmail.com"
                         fluid
-                        class="!bg-surface-50 focus:!bg-white"
+                        class="bg-surface-50! focus:bg-white!"
                         />
                         
                         
@@ -50,7 +74,7 @@ const form = ref({
                         type="password"
                         placeholder="*****"
                         fluid
-                        class="!bg-surface-50 focus:!bg-white"
+                        class="bg-surface-50! focus:bg-white!"
                         />
                         
                         </div>

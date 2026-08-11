@@ -1,7 +1,10 @@
 <script setup>
+import { useAuthStore } from '@/stores/auth.store';
 import { ref } from 'vue';
 import { useRoute } from 'vue-router';
 
+const authStore = useAuthStore()
+const { user } = authStore
 const route =useRoute();
 
 const menuItems =ref([
@@ -53,10 +56,10 @@ const menuItems =ref([
                 </div>
                 <div class="text-left">
                     <div class="text-sm font-semibold text-surface-900">
-                        Faqih Ikhtibar
+                        {{ user?.name }}
                     </div>
                     <div class="text-xs text-surface-500">
-                        faqih@kopdes.com
+                        {{ user?.email }}
                     </div>
                 </div>
                 <div class="ml-auto w-8-h8 rounded-lg flex items-center justify-center text-surface-400 group-hover:bg-red-50 group-hover:text--red-600 transition-colors">
