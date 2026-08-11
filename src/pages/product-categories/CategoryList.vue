@@ -1,12 +1,17 @@
 <script setup>
-import { Button, Column, DataTable, Select } from 'primevue';
+import { Button, Column, DataTable, IconField, InputIcon, InputText, Select } from 'primevue';
 import { useProductCategoryStore } from '@/stores/product-category.store';
 import { storeToRefs } from 'pinia';
 import { onMounted } from 'vue';
+import { useDebounceFn } from '@vueuse/core';
 
 const productCategoryStore = useProductCategoryStore();
-const { fetch, setLimit } = productCategoryStore
-const { items, loading, limit } = storeToRefs(productCategoryStore)
+const { fetch, setLimit, setPage, prevPage, nextPage } = productCategoryStore
+const { items, loading, limit, currentPage, totalPages, search } = storeToRefs(productCategoryStore)
+
+const onSearch = useDebounceFn (()=>{
+    setPage(1)
+}, 400)
 
 onMounted(() => {
     fetch()
@@ -34,6 +39,14 @@ onMounted(() => {
         </div>
         
         <div class="bg-white rounded-2xl border border-surface-200 p-2">
+            <div class="flex flex-col md:flex-row justify-between items-center px-4 py-4 gap-4">
+                <IconField iconPosition="left" class="w-full md:w-80">
+                    <InputIcon class="pi pi-search text-surface-400"/>
+                    <InputText <input v-model="search" placeholder="Search" @input="onSearch"/>
+                </IconField>
+            </div>
+            
+            
             <DataTable :value="items" :loading="loading" dataKey="id" class="clean-table" :rowHover="true">
                 <Column field="name" header="Name" class="min-w-[-16rem]">
                     <template #body="{ data }">
@@ -60,6 +73,17 @@ onMounted(() => {
                 <div class="flex items-center gap-2">
                     <span class="text-sm text-surface-500"> Rows per page:</span>
                     <Select :model-value="limit" :options="[5, 10 , 20, 50]" @update:model-value="setLimit"> </Select>
+                </div>
+                
+                <div class="flex items center gap-4">
+                    <span class="text-sm font-medium text-surface-600">
+                        {{  currentPage }} of {{ totalPages }}
+                    </span>
+                    
+                    <div class="flex gap-1">
+                        <Button icon="pi pi-chevron-left" text rounded severity="secondary" :disabled="currentPage == 1" class="w-9! h-9! border! border-surface-500 hover:bg-surface-50!" @click="prevPage()"/>
+                        <Button icon="pi pi-chevron-right" text rounded severity="secondary" :disabled="currentPage == totalPages" class="w-9! h-9! border! border-surface-500 hover:bg-surface-50!" @click="nextPage()"/>
+                    </div>
                 </div>
             </div>
            

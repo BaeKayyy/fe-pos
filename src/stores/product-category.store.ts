@@ -19,6 +19,13 @@ export const useProductCategoryStore = defineStore('productCategory',{
         loading: false
     }),
     
+    getters: {
+        currentPage: (state) => state.pagination.current_page || 1,
+        totalPages: (state) => state.pagination.last_page || 1
+        
+        
+    },
+    
     actions: {
         async fetch(){
             this.loading = true
@@ -39,10 +46,29 @@ export const useProductCategoryStore = defineStore('productCategory',{
             }
         },
         
+      setPage(page:number) {
+            this.page = page
+            this.fetch()
+        },
+        
         setLimit(limit: number){
             this.limit = limit
             this.page= 1
             this.fetch()
-        }
+        },
+        
+        nextPage(){
+            if(this.pagination.current_page < this.pagination.last_page){
+                this.page = this.pagination.current_page + 1
+                this.fetch()
+            }
+        },
+        
+        prevPage(){
+            if(this.pagination.current_page > 1 ){
+                this.page = this.pagination.current_page - 1
+                this.fetch()
+            }
+        },
     }
 })
