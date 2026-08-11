@@ -74,7 +74,7 @@ onMounted(() => {
             </div>
             
             <Button asChild v-slot="slotProps">
-                <RouterLink  :class="slotProps.class" >
+                <RouterLink :to="{ name: 'product-categories-create'}" :class="slotProps.class" >
                     Add Category
                 </RouterLink>
             </Button>
