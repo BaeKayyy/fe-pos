@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { createCategory } from '@/api/product-categories.api';
+import { createCategory, uploadCategoryImage } from '@/api/product-categories.api';
 import router from '@/router';
 import { Button, FileUpload, InputText, Message, Textarea, useToast } from 'primevue';
 import { computed, ref } from 'vue';
@@ -14,6 +14,7 @@ const errors = ref<Record<string, string[]>>({})
 
 
 const form = ref({
+    id: 0,
     name:"",
     description: ""
 })
@@ -41,8 +42,16 @@ const submit = async () => {
     loading.value =true
     
     try {
-        await createCategory(form.value)
+       const res = await createCategory(form.value)
+       
+       form.value.id = res.data.data.id
         
+       if(selectedFile.value){
+        const fd = new FormData()
+        fd.append("image",selectedFile.value)
+        await uploadCategoryImage(form.value.id, fd)
+       }
+       
         toast.add({
             severity: "success",
             summary: "Success",
