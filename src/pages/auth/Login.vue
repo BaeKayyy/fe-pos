@@ -58,7 +58,7 @@ async function login() {
                         type="text"
                         placeholder="nama@gmail.com"
                         fluid
-                        class="bg-surface-50! focus:bg-white!"
+                        class="bg-surface-50! focus:bg-white! border-surface-200"
                         />
                         
                         

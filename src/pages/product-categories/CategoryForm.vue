@@ -1,23 +1,70 @@
 <script setup lang="ts">
-import { Button, FileUpload } from 'primevue';
+import { createCategory } from '@/api/product-categories.api';
+import router from '@/router';
+import { Button, FileUpload, InputText, Message, Textarea, useToast } from 'primevue';
 import { computed, ref } from 'vue';
 import { useRoute } from 'vue-router';
 
+
 const route = useRoute()
+const toast = useToast()
+
+const loading = ref(false)
+const errors = ref<Record<string, string[]>>({})
+
+
+const form = ref({
+    name:"",
+    description: ""
+})
+
 
 const categoryId = computed<number | null> (()=>
     route.params.id ? Number(route.params.id): null
 )
 
 const isEdit = computed(() => !!categoryId.value)
+
 const imagePreview = ref<string | null>(null)
 const selectedFile = ref<File | null>(null)
+    
+    
 const onFileSelect = (event: { files: File[] }) =>{
     const file = event.files[0]
     
     if(!file) return
     selectedFile.value = file
     imagePreview.value = URL.createObjectURL(file)
+}
+
+const submit = async () => {
+    loading.value =true
+    
+    try {
+        await createCategory(form.value)
+        
+        toast.add({
+            severity: "success",
+            summary: "Success",
+            detail: "Category created succesfully",
+            life: 3000
+        })
+        router.push('/product-categories')
+    } catch (error: any) {
+        if (error.response?.status === 422){
+            error.value = error.response?.data.errors ?? {}
+            return
+        }
+        
+        toast.add({
+            severity: "error",
+            summary: "Error",
+            detail: error.response?.data?.message,
+            life: 3000
+        })
+    }  finally{
+       loading.value = false
+    }
 }
 
 </script>
@@ -53,7 +100,7 @@ const onFileSelect = (event: { files: File[] }) =>{
     </div>
     
     <div class="bg-white rounded-2xl border border-surface-200 overflow-hidden">
-        <form>
+        <form @submit.prevent="submit">
             <div class="p-6 md:p-8 grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12">
                 <div class="md:col-span-4 flex flex-col gap-4">
                     <label class="text-sm font-semibold text-surface-900">Category Image</label>
@@ -72,6 +119,50 @@ const onFileSelect = (event: { files: File[] }) =>{
                             <small class="text-surface-500 text-xs text-center">Max size: 2MB. Formats: JPG,PNG.</small>
                         
                     </div>
+                </div>
+                
+                <div class="md:col-span-8 flex flex-col gap-6">
+                     <div class="flex flex-col gap-2">
+                            <label for="name" class="font-medium text-surface-900">
+                            Name <span class="text-red-600">*</span>
+                        </label>
+                        <InputText 
+                        required
+                        id="name" 
+                        v-model="form.name"
+                        type="text"
+                        placeholder="Electornic"
+                        fluid
+                        class="bg-surface-50! focus:bg-white! border-surface-200"
+                        :invalid="!!errors.name"
+                        />
+                        
+                        <Message v-if="errors.name" severity="error" size="small" variant="simpel">
+                            {{  errors.name [0] }}
+                        </Message>
+                        </div>
+                        
+                        
+                         <div class="flex flex-col gap-2">
+                            <label for="description" class="font-medium text-surface-900">
+                            Description <span class="text-red-600">*</span>
+                        </label>
+                        <Textarea
+                        id="description" 
+                        v-model="form.description"
+                        type="text"
+                        placeholder="Electornic.."
+                        fluid
+                        class="bg-surface-50! focus:bg-white! border-surface-200 row-6"
+                        />
+                        </div>
+                        
+                        <div class="flex justify-end pt-4 mt-auto border-t border-surface-100">
+                            <div class="flex gap-3">
+                                <Button label="Cancel" severity="secondary" text @click="router.back"></Button>
+                                <Button type="submit" label="Save Category" icon="pi pi-check"></Button>
+                            </div>
+                        </div>
                 </div>
             </div>
         </form>
