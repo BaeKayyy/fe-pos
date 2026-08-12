@@ -5,6 +5,8 @@ import CategoryForm from '@/pages/product-categories/CategoryForm.vue'
 import CategoryList from '@/pages/product-categories/CategoryList.vue'
 import CustomerForm from '@/pages/customers/CustomerForm.vue'
 import CustomerList from '@/pages/customers/CustomerList.vue'
+import TransactionDetail from '@/pages/transactions/TransactionDetail.vue'
+import TransactionList from '@/pages/transactions/TransactionList.vue'
 import ProductForm from '@/pages/products/ProductForm.vue'
 import ProductList from '@/pages/products/ProductList.vue'
 import { useAuthStore } from '@/stores/auth.store'
@@ -78,6 +80,16 @@ const router = createRouter({
                     path: '/customers/:id/edit',
                     name: 'customers-edit',
                     component: CustomerForm
+                },
+                {
+                    path: '/transactions',
+                    name: 'transactions',
+                    component: TransactionList
+                },
+                {
+                    path: '/transactions/:id',
+                    name: 'transactions-detail',
+                    component: TransactionDetail
                 }
             ]
         }
