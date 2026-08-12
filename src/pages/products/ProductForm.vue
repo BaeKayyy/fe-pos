@@ -189,6 +189,8 @@ onMounted(async () => {
                                 optionLabel="name"
                                 optionValue="id"
                                 placeholder="Select a Category"
+                                filter
+                                filterPlaceholder="Search category..."
                                 class="w-full bg-surface-50! focus:bg-white! border-surface-200"
                                 :invalid="!!errors.product_category_id"
                             />

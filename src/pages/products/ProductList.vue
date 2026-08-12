@@ -118,6 +118,8 @@ onMounted(async () => {
                     optionLabel="name"
                     optionValue="id"
                     placeholder="All Categories"
+                    filter
+                    filterPlaceholder="Search category..."
                     class="w-full md:w-60"
                     @update:model-value="setCategory"
                 />

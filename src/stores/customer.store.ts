@@ -1,10 +1,10 @@
-import { getProducts } from "@/api/products.api";
-import type { Product } from "@/types/product";
+import { getCustomers } from "@/api/customers.api";
+import type { Customer } from "@/types/customer";
 import { defineStore } from "pinia";
 
-export const useProductStore = defineStore('product', {
+export const useCustomerStore = defineStore('customer', {
     state: () => ({
-        items: [] as Product[],
+        items: [] as Customer[],
         pagination: {
             current_page: 1,
             last_page: 1,
@@ -16,7 +16,6 @@ export const useProductStore = defineStore('product', {
         page: 1,
         limit: 10,
         search: '',
-        product_category_id: null as number | null,
         loading: false
     }),
 
@@ -30,26 +29,19 @@ export const useProductStore = defineStore('product', {
             this.loading = true
 
             try {
-                const res = await getProducts({
+                const res = await getCustomers({
                     page: this.page,
-                    search: this.search || undefined,
-                    limit: this.limit,
-                    product_category_id: this.product_category_id ?? undefined
+                    search: this.search,
+                    limit: this.limit
                 })
 
                 this.items = res.data.data.items
                 this.pagination = res.data.data.pagination
             } catch (error) {
-                console.error('failed to fetch products: ', error)
+                console.error('failed to fetch customers: ', error)
             } finally {
                 this.loading = false
             }
-        },
-
-        setCategory(categoryId: number | null) {
-            this.product_category_id = categoryId
-            this.page = 1
-            this.fetch()
         },
 
         setPage(page: number) {
@@ -75,6 +67,6 @@ export const useProductStore = defineStore('product', {
                 this.page = this.pagination.current_page - 1
                 this.fetch()
             }
-        },
+        }
     }
 })
