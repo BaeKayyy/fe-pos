@@ -7,6 +7,8 @@ export const getCategories =(params?: {
 }) => api.get('product-categories', {params})
 
 
+export const getCategoryOptions = (params?: { search?: string }) => api.get('/product-categories/options', { params })
+
 export const getCategory = (id: number) => api.get(`/product-categories/${id}`)
 
 export const createCategory =  (payload: {

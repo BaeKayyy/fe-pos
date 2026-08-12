@@ -1,4 +1,5 @@
-<script setup>
+<script setup lang="ts">
+import router from '@/router';
 import { useAuthStore } from '@/stores/auth.store';
 import { Button, Dialog } from 'primevue';
 
@@ -27,6 +28,7 @@ const menuItems =ref([
     {
         label: "Management",
         items: [
+             { icon: "pi pi-box", to:"/products", label:"Products"},
              { icon: "pi pi-tag", to:"/product-categories", label:"Product Categories"}
         ]
     }
@@ -54,9 +56,9 @@ const menuItems =ref([
                 </div>
                 
                 <div class="flex flex-col gap-1">
-                    <router-link v-for="(item, j) in section.items" :to ="item.to" :key="index"
+                    <router-link v-for="(item, j) in section.items" :to ="item.to" :key="j"
                     class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors duration-200" :class="[
-                        route.path == item.to ? 'bg-surface-100 text-primary-600' : 'text-surface-900 hover:bg-surface-100'
+                        (item.to === '/' ? route.path === '/' : route.path.startsWith(item.to)) ? 'bg-surface-100 text-primary-600 font-semibold' : 'text-surface-900 hover:bg-surface-100'
                     ]">
                         <i :class="[item.icon, 'text-lg']"></i>
                         <span class="font-medium text-sm">{{ item.label }}</span>
