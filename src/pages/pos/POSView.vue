@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { getProductsOptions } from '@/api/products.api';
 import type { Product } from '@/types/product';
+import { useDebounceFn } from '@vueuse/core';
 import { IconField, InputIcon, InputText } from 'primevue';
 import { onMounted, ref } from 'vue';
 
 const products = ref<Product[]>([]);
 const productsLoading = ref(false);
 const productSearch = ref('');
+
 
 const loadProducts = async (search?: string) => {
     productsLoading.value = true;
@@ -22,6 +24,10 @@ const loadProducts = async (search?: string) => {
         productsLoading.value = false;
     }
 };
+
+const onProductSearch = useDebounceFn(() => {
+    loadProducts(productSearch.value);
+}, 400);
 
 const formatPrice = (val?: number | string) => {
     if (val === undefined || val === null) return 'Rp 0';
@@ -50,7 +56,7 @@ onMounted(() => {
                 <div class="bg-white rounded-2xl border border-surface-200 p-4">
                     <IconField iconPosition="left" class="w-full mb-4">
                         <InputIcon class="pi pi-search text-surface-400" />
-                        <InputText placeholder="Search" class="w-full bg-surface-50 border-surface-200 focus:bg-white focus:border-primary-500" />
+                        <InputText v-model="productSearch" placeholder="Search" class="w-full bg-surface-50 border-surface-200 focus:bg-white focus:border-primary-500" @input="onProductSearch"/>
                     </IconField>
 
                     <!-- Product list -->
