@@ -56,6 +56,7 @@ export const usePosStore = defineStore('pos', {
         },
         clearCart(){
             this.cart = []
+            this.customerId = null
         }
     }
 })
