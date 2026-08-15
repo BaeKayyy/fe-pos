@@ -61,7 +61,19 @@ onMounted(() =>{
                         <button v-for="product in products" :key="product.id" class="group p-3 rounded-xl border border-surface-200 hover:border-primary-500 hover:shadow-md transition-all text-left bg-white" :disabled="product.stock === 0" :class="product.stock === 0 ? 'opacity-50 cursor-not-allowed': ''">
                             <div class="aspect-square rounded-lg bg-surface-100 mb-2 overflow-hidden">
                                 <img v-if="product.image" :src="product.image" :alt="product.name" class="w-full h-full object-cover ">
-                            </div>                            
+                                <div v-else class="w-full h-full flex items-center justify-center">
+                                    <span class="text-surface-500 text-sm">No Image</span>
+                                </div>
+                            </div> 
+                            <div class="text-sm font-medium text-surface-900 truncate">
+                                {{ product.name }}
+                            </div> 
+                            <div class="text-sm text-surface-500">
+                                {{ product.price }}
+                            </div>           
+                            <div class="text-sm text-surface-500">
+                                Stock: {{ product.stock }}
+                            </div>                   
                         </button>
                      </div>
                 </div>
