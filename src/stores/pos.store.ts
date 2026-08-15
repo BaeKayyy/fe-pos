@@ -1,3 +1,4 @@
+import { createTransaction } from "@/api/transactions.api";
 import type { Product } from "@/types/product";
 import type { CartItem } from "@/types/transaction";
 import { defineStore } from "pinia";
@@ -57,6 +58,29 @@ export const usePosStore = defineStore('pos', {
         clearCart(){
             this.cart = []
             this.customerId = null
+        },
+        setCustomer(id: number | null){
+            this.customerId =  id 
+        },
+        async checkout(){
+            this.loading = true
+            try {
+                const payload  = {
+                    customer_id: this.customerId,
+                    tax: this.tax,
+                    items: this.cart.map(item => ({ 
+                            product_id: item.product.id,
+                            quantity: item.quantity
+                    }))
+                }
+                const res = await createTransaction(payload)
+                this.clearCart()
+                return res.data.data
+                
+            } finally{
+                this.loading = false
+            }
         }
+
     }
 })

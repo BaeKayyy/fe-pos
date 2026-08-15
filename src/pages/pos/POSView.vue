@@ -20,8 +20,8 @@ const customerOptions = ref<Customer[]>([]);
 const customerOptionsLoading = ref(false);
 
 const posStore = usePosStore();
-const { cart, customerId, subtotal, tax, total } = storeToRefs(posStore);
-const { addToCart, removeFromCart, updateQuantity, clearCart } = posStore;
+const { cart, customerId, subtotal, tax, total, loading: checkoutLoading } = storeToRefs(posStore);
+const { addToCart, removeFromCart, updateQuantity, clearCart, checkout } = posStore;
 
 // Customer Modal state
 const showCustomerModal = ref(false);
@@ -96,6 +96,49 @@ const handleCreateCustomer = async () => {
         });
     } finally {
         customerLoading.value = false;
+    }
+};
+
+const handleCheckout = async () => {
+    if (!customerId.value) {
+        toast.add({
+            severity: 'warn',
+            summary: 'Warning',
+            detail: 'Please select a customer',
+            life: 3000
+        });
+        return;
+    }
+
+    if (paymentAmount.value < total.value) {
+        toast.add({
+            severity: 'warn',
+            summary: 'Warning',
+            detail: 'Payment amount is less than the total',
+            life: 3000
+        });
+        return;
+    }
+
+    try {
+        await checkout();
+
+        toast.add({
+            severity: 'success',
+            summary: 'Success',
+            detail: 'Transaction created successfully',
+            life: 3000
+        });
+
+        paymentAmount.value = 0;
+        await loadProducts(productSearch.value);
+    } catch (error: any) {
+        toast.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: error.response?.data?.message ?? 'An error occurred',
+            life: 3000
+        });
     }
 };
 
@@ -297,7 +340,14 @@ onMounted(() => {
                     </div>
 
                     <div class="mt-4 space-y-2">
-                        <Button label="Checkout" icon="pi pi-check" class="w-full" :disabled="cart.length === 0"/>
+                        <Button 
+                            label="Checkout" 
+                            icon="pi pi-check" 
+                            class="w-full" 
+                            :disabled="cart.length === 0" 
+                            :loading="checkoutLoading"
+                            @click="handleCheckout"
+                        />
                         <Button label="Clear Cart" icon="pi pi-trash" class="w-full" severity="secondary" :disabled="cart.length === 0" @click="clearCart"/>
                     </div>
                 </div>            
