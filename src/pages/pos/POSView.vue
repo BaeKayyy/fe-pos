@@ -4,6 +4,7 @@ import { getProductsOptions } from '@/api/products.api';
 import { usePosStore } from '@/stores/pos.store';
 import type { Customer } from '@/types/customer';
 import type { Product } from '@/types/product';
+import type { Transaction } from '@/types/transaction';
 import { useDebounceFn } from '@vueuse/core';
 import { storeToRefs } from 'pinia';
 import { Button, Dialog, IconField, InputIcon, InputNumber, InputText, Message, Select, useToast } from 'primevue';
@@ -31,6 +32,11 @@ const customerForm = ref({
     name: '',
     phone: ''
 });
+
+// Receipt Modal state
+const showReceiptModal = ref(false);
+const receiptTransaction = ref<Transaction | null>(null);
+const receiptPaymentAmount = ref(0);
 
 const loadProducts = async (search?: string) => {
     productsLoading.value = true;
@@ -120,8 +126,10 @@ const handleCheckout = async () => {
         return;
     }
 
+    const currentPayment = paymentAmount.value;
+
     try {
-        await checkout();
+        const transactionResult = await checkout();
 
         toast.add({
             severity: 'success',
@@ -129,6 +137,10 @@ const handleCheckout = async () => {
             detail: 'Transaction created successfully',
             life: 3000
         });
+
+        receiptTransaction.value = transactionResult;
+        receiptPaymentAmount.value = currentPayment;
+        showReceiptModal.value = true;
 
         paymentAmount.value = 0;
         await loadProducts(productSearch.value);
@@ -140,6 +152,19 @@ const handleCheckout = async () => {
             life: 3000
         });
     }
+};
+
+const getProductName = (item: any) => {
+    if (!item) return '-';
+    if (typeof item.product === 'string') return item.product;
+    if (item.product && typeof item.product === 'object' && item.product.name) return item.product.name;
+    if (item.product_name) return item.product_name;
+    if (item.name) return item.name;
+    return '-';
+};
+
+const printReceipt = () => {
+    window.print();
 };
 
 const onProductSearch = useDebounceFn(() => {
@@ -398,6 +423,84 @@ onMounted(() => {
                     <Button type="submit" label="Save Customer" icon="pi pi-check" :loading="customerLoading" />
                 </div>
             </form>
+        </Dialog>
+
+        <!-- Transaction Receipt Modal Dialog -->
+        <Dialog v-model:visible="showReceiptModal" header="Transaction Receipt" :modal="true" :style="{ width: '420px', maxWidth: '90vw' }">
+            <div v-if="receiptTransaction" id="printable-receipt" class="flex flex-col gap-3 py-1 text-surface-900 font-sans">
+                <!-- Header -->
+                <div class="text-center">
+                    <h3 class="text-lg font-bold uppercase tracking-wider text-surface-900">KOPDES</h3>
+                    <p class="text-xs text-surface-500 font-mono mt-0.5">
+                        {{ receiptTransaction.created_at }}
+                    </p>
+                </div>
+
+                <div class="border-b border-dotted border-surface-300"></div>
+
+                <!-- Transaction Code & Customer -->
+                <div class="text-sm space-y-1 text-surface-600">
+                    <div>
+                        Transaction Code:<span class="font-bold text-surface-900 font-mono">{{ receiptTransaction.code }}</span>
+                    </div>
+                    <div>
+                        Customer:<span class="font-bold text-surface-900">{{ receiptTransaction.customer?.name ?? '-' }}</span>
+                    </div>
+                </div>
+
+                <div class="border-b border-dotted border-surface-300"></div>
+
+                <!-- Items List -->
+                <div class="space-y-1.5 text-sm">
+                    <div v-for="item in receiptTransaction.items" :key="item.id" class="flex justify-between items-center">
+                        <span class="text-surface-600 font-normal">
+                            {{ item.quantity }} x {{ formatPrice(item.price) }}
+                        </span>
+                        <span class="font-medium text-surface-900">
+                            {{ formatPrice(item.subtotal) }}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="border-b border-dotted border-surface-300"></div>
+
+                <!-- Summary Breakdown -->
+                <div class="space-y-1 text-sm text-surface-600">
+                    <div class="flex justify-between">
+                        <span>Subtotal</span>
+                        <span class="font-medium text-surface-900">{{ formatPrice(receiptTransaction.subtotal) }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Tax (11%)</span>
+                        <span class="font-medium text-surface-900">{{ formatPrice(receiptTransaction.tax) }}</span>
+                    </div>
+                    <div class="flex justify-between font-medium text-surface-900">
+                        <span>Total</span>
+                        <span class="font-bold text-surface-900">{{ formatPrice(receiptTransaction.total) }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Payment</span>
+                        <span class="font-medium text-surface-900">{{ formatPrice(receiptPaymentAmount) }}</span>
+                    </div>
+                    <div class="flex justify-between font-bold text-surface-900">
+                        <span>Change</span>
+                        <span class="font-bold text-surface-900">{{ formatPrice(receiptPaymentAmount - receiptTransaction.total) }}</span>
+                    </div>
+                </div>
+
+                <div class="border-b border-dotted border-surface-300"></div>
+
+                <!-- Footer Note -->
+                <div class="text-center text-xs text-surface-400 py-1">
+                    Thank you for shopping with us!
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex justify-end gap-2 pt-2">
+                    <Button label="Print Receipt" icon="pi pi-print" severity="secondary" outlined class="bg-white border-surface-300 text-surface-700 font-medium" @click="printReceipt" />
+                    <Button label="OK" icon="pi pi-check" severity="success" class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium border-0 px-4" @click="showReceiptModal = false" />
+                </div>
+            </div>
         </Dialog>
     </div>
 </template>
