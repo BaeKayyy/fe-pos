@@ -5,28 +5,33 @@ import { IconField, InputIcon, InputText } from 'primevue';
 import { onMounted, ref } from 'vue';
 
 const products = ref<Product[]>([]);
-const productsLoading = ref(false)
+const productsLoading = ref(false);
 const productSearch = ref('');
 
-const loadProducts = async(search?: string) =>{
-    productsLoading.value = true
+const loadProducts = async (search?: string) => {
+    productsLoading.value = true;
     try {
         const res = await getProductsOptions({
             search: search || undefined,
             limit: 10,
-        })
-        products.value = res.data.data
+        });
+        products.value = res.data.data;
     } catch (error) {
-        console.log(error)
-    }finally{
-        productsLoading.value = false
+        console.log(error);
+    } finally {
+        productsLoading.value = false;
     }
-    
-}
+};
 
-onMounted(() =>{
+const formatPrice = (val?: number | string) => {
+    if (val === undefined || val === null) return 'Rp 0';
+    const num = typeof val === 'string' ? parseFloat(val) : val;
+    return 'Rp ' + Math.round(num).toLocaleString('id-ID');
+};
+
+onMounted(() => {
     loadProducts();
-})
+});
 </script>
 
 <template>
@@ -60,7 +65,7 @@ onMounted(() =>{
                      <div v-else class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                         <button v-for="product in products" :key="product.id" class="group p-3 rounded-xl border border-surface-200 hover:border-primary-500 hover:shadow-md transition-all text-left bg-white" :disabled="product.stock === 0" :class="product.stock === 0 ? 'opacity-50 cursor-not-allowed': ''">
                             <div class="aspect-square rounded-lg bg-surface-100 mb-2 overflow-hidden">
-                                <img v-if="product.image" :src="product.image" :alt="product.name" class="w-full h-full object-cover ">
+                                <img v-if="product.image" :src="product.image" :alt="product.name" class="w-full h-full object-cover">
                                 <div v-else class="w-full h-full flex items-center justify-center">
                                     <span class="text-surface-500 text-sm">No Image</span>
                                 </div>
@@ -69,7 +74,7 @@ onMounted(() =>{
                                 {{ product.name }}
                             </div> 
                             <div class="text-sm text-surface-500">
-                                {{ product.price }}
+                                {{ formatPrice(product.price) }}
                             </div>           
                             <div class="text-sm text-surface-500">
                                 Stock: {{ product.stock }}
