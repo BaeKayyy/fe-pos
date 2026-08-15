@@ -1,5 +1,32 @@
 <script setup lang="ts">
+import { getProductsOptions } from '@/api/products.api';
+import type { Product } from '@/types/product';
 import { IconField, InputIcon, InputText } from 'primevue';
+import { onMounted, ref } from 'vue';
+
+const products = ref<Product[]>([]);
+const productsLoading = ref(false)
+const productSearch = ref('');
+
+const loadProducts = async(search?: string) =>{
+    productsLoading.value = true
+    try {
+        const res = await getProductsOptions({
+            search: search || undefined,
+            limit: 10,
+        })
+        products.value = res.data.data
+    } catch (error) {
+        console.log(error)
+    }finally{
+        productsLoading.value = false
+    }
+    
+}
+
+onMounted(() =>{
+    loadProducts();
+})
 </script>
 
 <template>
@@ -15,11 +42,28 @@ import { IconField, InputIcon, InputText } from 'primevue';
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div class="lg:col-span-2">
-                <div class="bg-white rounded-2xl border border-surface-200 p-4 md:p-6">
-                    <IconField iconPosition="left" class="w-full md:w-80">
+                <div class="bg-white rounded-2xl border border-surface-200 p-4">
+                    <IconField iconPosition="left" class="w-full mb-4">
                         <InputIcon class="pi pi-search text-surface-400" />
-                        <InputText placeholder="Search" class="w-full rounded-xl border-surface-300" />
+                        <InputText placeholder="Search" class="w-full bg-surface-50 border-surface-200 focus:bg-white focus:border-primary-500" />
                     </IconField>
+
+                    <!-- Product list -->
+                     <div v-if="productsLoading" class="text-center py-12 text-surface-500">
+                        Loading products....
+                     </div>
+
+                     <div v-else-if="products.length === 0" class="text-center py-12 text-surface-500">
+                        No products found.
+                     </div>
+
+                     <div v-else class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                        <button v-for="product in products" :key="product.id" class="group p-3 rounded-xl border border-surface-200 hover:border-primary-500 hover:shadow-md transition-all text-left bg-white" :disabled="product.stock === 0" :class="product.stock === 0 ? 'opacity-50 cursor-not-allowed': ''">
+                            <div class="aspect-square rounded-lg bg-surface-100 mb-2 overflow-hidden">
+                                <img v-if="product.image" :src="product.image" :alt="product.name" class="w-full h-full object-cover ">
+                            </div>                            
+                        </button>
+                     </div>
                 </div>
             </div>
         </div>
