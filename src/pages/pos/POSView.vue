@@ -1,13 +1,19 @@
 <script setup lang="ts">
 import { getProductsOptions } from '@/api/products.api';
+import { usePosStore } from '@/stores/pos.store';
 import type { Product } from '@/types/product';
 import { useDebounceFn } from '@vueuse/core';
+import { storeToRefs } from 'pinia';
 import { IconField, InputIcon, InputText } from 'primevue';
 import { onMounted, ref } from 'vue';
 
 const products = ref<Product[]>([]);
 const productsLoading = ref(false);
 const productSearch = ref('');
+
+const posStore = usePosStore()
+const { cart } = storeToRefs(posStore)
+const { addToCart, cartItems, cartCount, cartTotal } = posStore
 
 
 const loadProducts = async (search?: string) => {
@@ -69,7 +75,7 @@ onMounted(() => {
                      </div>
 
                      <div v-else class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                        <button v-for="product in products" :key="product.id" class="group p-3 rounded-xl border border-surface-200 hover:border-primary-500 hover:shadow-md transition-all text-left bg-white" :disabled="product.stock === 0" :class="product.stock === 0 ? 'opacity-50 cursor-not-allowed': ''">
+                        <button @click="addToCart(product)" v-for="product in products" :key="product.id" class="group p-3 rounded-xl border border-surface-200 hover:border-primary-500 hover:shadow-md transition-all text-left bg-white" :disabled="product.stock === 0" :class="product.stock === 0 ? 'opacity-50 cursor-not-allowed': ''">
                             <div class="aspect-square rounded-lg bg-surface-100 mb-2 overflow-hidden">
                                 <img v-if="product.image" :src="product.image" :alt="product.name" class="w-full h-full object-cover">
                                 <div v-else class="w-full h-full flex items-center justify-center">
@@ -88,6 +94,24 @@ onMounted(() => {
                         </button>
                      </div>
                 </div>
+            </div>
+
+            <div class="lg:col-span-1">
+                <div class="bg-white rounded-2xl border border-surface-200 p-4 sticky top-4">
+                    <h2 class="text-lg font-semibold text-surface-900 mb-4">Cart</h2>
+
+                    <div v-if="cart.length === 0 " class="text-center py-8 text-surface-400">
+                        <i class="pi pi-shopping-cart text-3xl mb-2"></i>
+                        <p class="text-sm">Cart is empty</p>
+                    </div>
+
+                    <div v-else ref="cartContainer" class="space-y-2 mb-4 max-h-60 overflow-y-auto">
+                        <div v-for="item in cart" :key="item.product.id" class="p-3 rounded-lg bg-surface-50">
+
+
+                        </div>
+                    </div>
+                </div>            
             </div>
         </div>
     </div>

@@ -1,4 +1,5 @@
 import type { Customer } from './customer';
+import type { Product } from './product';
 
 export interface TransactionProduct {
     id: number;
@@ -23,4 +24,9 @@ export interface Transaction {
     tax: number;
     total: number;
     created_at?: string;
+}
+
+export interface CartItem {
+    product: Product ,
+    quantity: number
 }
