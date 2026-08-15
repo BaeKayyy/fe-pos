@@ -9,6 +9,7 @@ import TransactionDetail from '@/pages/transactions/TransactionDetail.vue'
 import TransactionList from '@/pages/transactions/TransactionList.vue'
 import ProductForm from '@/pages/products/ProductForm.vue'
 import ProductList from '@/pages/products/ProductList.vue'
+import POSView from '@/pages/pos/POSView.vue'
 import { useAuthStore } from '@/stores/auth.store'
 import { createRouter, createWebHistory } from 'vue-router'
 
@@ -35,6 +36,11 @@ const router = createRouter({
                     path: '',
                     name: 'dashboard',
                     component: Dashboard
+                },
+                {
+                    path: '/pos',
+                    name: 'pos',
+                    component: POSView
                 },
                 {
                     path: '/product-categories',
