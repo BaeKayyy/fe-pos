@@ -58,6 +58,10 @@ const goToTransactions = () => {
     router.push('/transactions');
 };
 
+const goToTransactionDetail = (id: number) => {
+    router.push({ name: 'transactions-detail', params: { id } });
+};
+
 const fetchSalesData = async () => {
     try {
         const salesRes = await getDashboardSales(salesPeriod.value);
@@ -380,11 +384,79 @@ onMounted(() => {
 
         <!-- Row 3: Recent Transactions + Top Products -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <!-- Left: Recent Transactions (2 cols, populated in Commit 9) -->
-            <div class="lg:col-span-2" id="recent-transactions-placeholder">
+            <!-- Left: Recent Transactions Table (2 cols) -->
+            <div class="lg:col-span-2">
                 <div v-if="isLoading" class="bg-white p-6 rounded-xl border border-surface-200 h-[320px]">
                     <Skeleton width="40%" height="1.25rem" class="mb-4" />
                     <Skeleton width="100%" height="200px" />
+                </div>
+                <div v-else class="bg-white p-6 rounded-xl border border-surface-200 shadow-xs flex flex-col justify-between h-full">
+                    <div>
+                        <!-- Header -->
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-base font-semibold text-surface-900">Recent Transactions</h3>
+                            <button
+                                @click="goToTransactions"
+                                class="text-xs font-semibold text-emerald-600 hover:text-emerald-700 transition-colors flex items-center gap-1 cursor-pointer"
+                            >
+                                View all transactions
+                                <i class="pi pi-chevron-right text-[10px]"></i>
+                            </button>
+                        </div>
+
+                        <!-- Table -->
+                        <div v-if="recentTransactions.length > 0" class="overflow-x-auto">
+                            <table class="w-full text-left text-xs">
+                                <thead>
+                                    <tr class="border-b border-surface-100 text-surface-400 font-semibold uppercase tracking-wider">
+                                        <th class="pb-2.5 font-semibold">Code</th>
+                                        <th class="pb-2.5 font-semibold">Customer</th>
+                                        <th class="pb-2.5 font-semibold">Total</th>
+                                        <th class="pb-2.5 font-semibold">Date</th>
+                                        <th class="pb-2.5 font-semibold text-right">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-surface-100 text-surface-900">
+                                    <tr
+                                        v-for="trx in recentTransactions"
+                                        :key="trx.id"
+                                        class="hover:bg-surface-50/50 transition-colors"
+                                    >
+                                        <td class="py-3 font-mono font-semibold text-surface-900 text-xs">
+                                            {{ trx.code }}
+                                        </td>
+                                        <td class="py-3 font-medium text-surface-700">
+                                            {{ trx.customer_name }}
+                                        </td>
+                                        <td class="py-3 font-semibold text-surface-900">
+                                            {{ formatCurrency(trx.total) }}
+                                        </td>
+                                        <td class="py-3 text-surface-500 text-xs whitespace-nowrap">
+                                            {{ trx.date }}
+                                        </td>
+                                        <td class="py-3 text-right">
+                                            <button
+                                                @click="goToTransactionDetail(trx.id)"
+                                                class="w-7 h-7 rounded-lg bg-surface-100 hover:bg-surface-200 text-surface-600 hover:text-surface-900 inline-flex items-center justify-center transition-colors cursor-pointer"
+                                                title="View Detail"
+                                            >
+                                                <i class="pi pi-eye text-xs"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Empty State -->
+                        <div v-else class="py-12 text-center">
+                            <div class="w-12 h-12 rounded-full bg-surface-100 text-surface-400 flex items-center justify-center mx-auto mb-3">
+                                <i class="pi pi-receipt text-xl"></i>
+                            </div>
+                            <div class="text-sm font-semibold text-surface-900">No transactions yet</div>
+                            <p class="text-xs text-surface-400 mt-1">Completed store transactions will appear here</p>
+                        </div>
+                    </div>
                 </div>
             </div>
 
