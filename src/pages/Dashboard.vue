@@ -20,11 +20,13 @@ import type {
 
 const router = useRouter();
 
-// Filters & Loading
+// Filters, Loading & Error State
 const selectedPeriod = ref('today');
 const salesPeriod = ref('7d');
 const isLoading = ref(true);
 const isRefreshing = ref(false);
+const isError = ref(false);
+const errorMessage = ref('');
 
 const periodOptions = [
     { label: 'Today', value: 'today' },
@@ -77,6 +79,8 @@ const fetchDashboardData = async (isRefresh = false) => {
     } else {
         isLoading.value = true;
     }
+    isError.value = false;
+    errorMessage.value = '';
 
     try {
         const [sumRes, salesRes, lowRes, topRes, recentRes] = await Promise.all([
@@ -92,8 +96,10 @@ const fetchDashboardData = async (isRefresh = false) => {
         lowStockProducts.value = lowRes.data.data;
         topProducts.value = topRes.data.data;
         recentTransactions.value = recentRes.data.data;
-    } catch (err) {
+    } catch (err: any) {
         console.error('Failed to load dashboard data:', err);
+        isError.value = true;
+        errorMessage.value = err?.response?.data?.message || 'Unable to connect to dashboard server. Please check connection and try again.';
     } finally {
         isLoading.value = false;
         isRefreshing.value = false;
@@ -142,6 +148,26 @@ onMounted(() => {
                     <span class="hidden sm:inline text-sm font-medium">Refresh</span>
                 </Button>
             </div>
+        </div>
+
+        <!-- Error Banner -->
+        <div
+            v-if="isError"
+            class="p-4 rounded-xl bg-red-50 border border-red-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-red-700 text-sm"
+        >
+            <div class="flex items-center gap-2">
+                <i class="pi pi-exclamation-triangle text-base text-red-500"></i>
+                <span>{{ errorMessage }}</span>
+            </div>
+            <Button
+                type="button"
+                severity="danger"
+                size="small"
+                label="Retry"
+                icon="pi pi-refresh"
+                @click="fetchDashboardData(false)"
+                class="!rounded-lg text-xs"
+            />
         </div>
 
         <!-- Row 1: KPI Cards -->
