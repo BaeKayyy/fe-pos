@@ -87,13 +87,16 @@ const computedPoints = computed(() => {
 // Cubic bezier path string
 const linePath = computed(() => {
     const pts = computedPoints.value;
-    if (pts.length === 0) return '';
-    if (pts.length === 1) return `M ${pts[0].x} ${pts[0].y}`;
+    if (!pts || pts.length === 0) return '';
+    const first = pts[0];
+    if (!first) return '';
+    if (pts.length === 1) return `M ${first.x} ${first.y}`;
 
-    let path = `M ${pts[0].x} ${pts[0].y}`;
+    let path = `M ${first.x} ${first.y}`;
     for (let i = 0; i < pts.length - 1; i++) {
         const curr = pts[i];
         const next = pts[i + 1];
+        if (!curr || !next) continue;
         const cp1x = curr.x + (next.x - curr.x) / 2;
         const cp1y = curr.y;
         const cp2x = curr.x + (next.x - curr.x) / 2;
@@ -105,12 +108,13 @@ const linePath = computed(() => {
 
 const areaPath = computed(() => {
     const pts = computedPoints.value;
-    if (pts.length === 0) return '';
-    const lastX = pts[pts.length - 1].x;
-    const firstX = pts[0].x;
+    if (!pts || pts.length === 0) return '';
+    const last = pts[pts.length - 1];
+    const first = pts[0];
+    if (!last || !first) return '';
     const bottomY = paddingTop + chartHeight;
 
-    return `${linePath.value} L ${lastX} ${bottomY} L ${firstX} ${bottomY} Z`;
+    return `${linePath.value} L ${last.x} ${bottomY} L ${first.x} ${bottomY} Z`;
 });
 </script>
 

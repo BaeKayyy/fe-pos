@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue';
+import { useRouter } from 'vue-router';
 import { Button, Select, Skeleton } from 'primevue';
 import SalesChart from '@/components/SalesChart.vue';
 import {
@@ -16,6 +17,8 @@ import type {
     TopProduct,
     RecentTransaction
 } from '@/types/dashboard';
+
+const router = useRouter();
 
 // Filters & Loading
 const selectedPeriod = ref('today');
@@ -45,6 +48,14 @@ const formatCurrency = (val: number) => {
         currency: 'IDR',
         maximumFractionDigits: 0
     }).format(val);
+};
+
+const goToProducts = () => {
+    router.push('/products');
+};
+
+const goToTransactions = () => {
+    router.push('/transactions');
 };
 
 const fetchSalesData = async () => {
@@ -270,7 +281,7 @@ onMounted(() => {
             </div>
         </div>
 
-        <!-- Row 2: Sales Overview Chart + Low Stock Placeholder -->
+        <!-- Row 2: Sales Overview Chart + Low Stock -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <!-- Left: Sales Overview Chart (2 cols) -->
             <div class="lg:col-span-2">
@@ -287,13 +298,159 @@ onMounted(() => {
                 />
             </div>
 
-            <!-- Right: Low Stock Card Placeholder (Populated in Commit 8) -->
-            <div class="lg:col-span-1" id="low-stock-placeholder">
-                <div v-if="isLoading" class="bg-white p-6 rounded-xl border border-surface-200 h-[340px]">
-                    <Skeleton width="50%" height="1.5rem" class="mb-4" />
-                    <Skeleton width="100%" height="40px" class="mb-2" />
-                    <Skeleton width="100%" height="40px" class="mb-2" />
-                    <Skeleton width="100%" height="40px" />
+            <!-- Right: Low Stock Card -->
+            <div class="lg:col-span-1">
+                <div v-if="isLoading" class="bg-white p-6 rounded-xl border border-surface-200 h-[340px] flex flex-col justify-between">
+                    <div>
+                        <Skeleton width="50%" height="1.25rem" class="mb-4" />
+                        <div class="space-y-3">
+                            <Skeleton width="100%" height="2.5rem" class="rounded-lg" />
+                            <Skeleton width="100%" height="2.5rem" class="rounded-lg" />
+                            <Skeleton width="100%" height="2.5rem" class="rounded-lg" />
+                        </div>
+                    </div>
+                </div>
+                <div v-else class="bg-white p-6 rounded-xl border border-surface-200 shadow-xs flex flex-col justify-between h-full">
+                    <div>
+                        <!-- Header -->
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-base font-semibold text-surface-900">Low Stock</h3>
+                            <button
+                                @click="goToProducts"
+                                class="text-xs font-semibold text-emerald-600 hover:text-emerald-700 transition-colors flex items-center gap-1 cursor-pointer"
+                            >
+                                View all products
+                                <i class="pi pi-chevron-right text-[10px]"></i>
+                            </button>
+                        </div>
+
+                        <!-- Product List -->
+                        <div v-if="lowStockProducts.length > 0" class="divide-y divide-surface-100">
+                            <div
+                                v-for="product in lowStockProducts"
+                                :key="product.id"
+                                class="py-3 flex items-center justify-between gap-3 first:pt-0 last:pb-0"
+                            >
+                                <div class="flex items-center gap-3 min-w-0">
+                                    <div class="w-10 h-10 rounded-lg bg-surface-100 border border-surface-200 overflow-hidden flex-shrink-0 flex items-center justify-center">
+                                        <img
+                                            v-if="product.image"
+                                            :src="product.image"
+                                            :alt="product.name"
+                                            class="w-full h-full object-cover"
+                                        />
+                                        <i v-else class="pi pi-box text-surface-400 text-lg"></i>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <div class="text-sm font-medium text-surface-900 truncate">
+                                            {{ product.name }}
+                                        </div>
+                                        <div class="text-xs text-surface-400 truncate">
+                                            {{ product.category_name || 'General' }}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="flex-shrink-0 text-right">
+                                    <span
+                                        v-if="product.stock === 0"
+                                        class="px-2 py-0.5 text-xs font-semibold text-red-600 bg-red-50 rounded"
+                                    >
+                                        Out of stock
+                                    </span>
+                                    <span v-else class="text-sm font-bold text-surface-900">
+                                        {{ product.stock }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Empty State -->
+                        <div v-else class="py-12 text-center">
+                            <div class="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-3">
+                                <i class="pi pi-check-circle text-xl"></i>
+                            </div>
+                            <div class="text-sm font-semibold text-surface-900">All stocks healthy</div>
+                            <p class="text-xs text-surface-400 mt-1">No products below threshold</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Row 3: Recent Transactions + Top Products -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Left: Recent Transactions (2 cols, populated in Commit 9) -->
+            <div class="lg:col-span-2" id="recent-transactions-placeholder">
+                <div v-if="isLoading" class="bg-white p-6 rounded-xl border border-surface-200 h-[320px]">
+                    <Skeleton width="40%" height="1.25rem" class="mb-4" />
+                    <Skeleton width="100%" height="200px" />
+                </div>
+            </div>
+
+            <!-- Right: Top Products Card (1 col) -->
+            <div class="lg:col-span-1">
+                <div v-if="isLoading" class="bg-white p-6 rounded-xl border border-surface-200 h-[320px] flex flex-col justify-between">
+                    <div>
+                        <Skeleton width="50%" height="1.25rem" class="mb-4" />
+                        <div class="space-y-3">
+                            <Skeleton width="100%" height="2.5rem" class="rounded-lg" />
+                            <Skeleton width="100%" height="2.5rem" class="rounded-lg" />
+                            <Skeleton width="100%" height="2.5rem" class="rounded-lg" />
+                        </div>
+                    </div>
+                </div>
+                <div v-else class="bg-white p-6 rounded-xl border border-surface-200 shadow-xs flex flex-col justify-between h-full">
+                    <div>
+                        <!-- Header -->
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-base font-semibold text-surface-900">Top Products</h3>
+                            <button
+                                @click="goToProducts"
+                                class="text-xs font-semibold text-emerald-600 hover:text-emerald-700 transition-colors flex items-center gap-1 cursor-pointer"
+                            >
+                                View all products
+                                <i class="pi pi-chevron-right text-[10px]"></i>
+                            </button>
+                        </div>
+
+                        <!-- Top Products List -->
+                        <div v-if="topProducts.length > 0" class="space-y-3.5">
+                            <div v-for="item in topProducts" :key="item.id" class="flex items-center gap-3">
+                                <div class="w-9 h-9 rounded-lg bg-surface-100 border border-surface-200 overflow-hidden flex-shrink-0 flex items-center justify-center">
+                                    <img
+                                        v-if="item.image"
+                                        :src="item.image"
+                                        :alt="item.name"
+                                        class="w-full h-full object-cover"
+                                    />
+                                    <i v-else class="pi pi-box text-surface-400 text-base"></i>
+                                </div>
+
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center justify-between text-xs mb-1">
+                                        <span class="font-medium text-surface-900 truncate pr-2">{{ item.name }}</span>
+                                        <span class="font-semibold text-surface-900 flex-shrink-0">{{ item.sold_quantity }}</span>
+                                    </div>
+                                    <div class="h-2 w-full bg-surface-100 rounded-full overflow-hidden">
+                                        <div
+                                            class="h-full bg-emerald-500 rounded-full transition-all duration-500"
+                                            :style="{ width: `${item.percentage}%` }"
+                                        ></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Empty State -->
+                        <div v-else class="py-12 text-center">
+                            <div class="w-12 h-12 rounded-full bg-surface-100 text-surface-400 flex items-center justify-center mx-auto mb-3">
+                                <i class="pi pi-shopping-bag text-xl"></i>
+                            </div>
+                            <div class="text-sm font-semibold text-surface-900">No sales record</div>
+                            <p class="text-xs text-surface-400 mt-1">No top selling products in this period</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
