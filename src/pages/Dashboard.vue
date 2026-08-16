@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue';
 import { Button, Select, Skeleton } from 'primevue';
+import SalesChart from '@/components/SalesChart.vue';
 import {
     getDashboardSummary,
     getDashboardSales,
@@ -18,6 +19,7 @@ import type {
 
 // Filters & Loading
 const selectedPeriod = ref('today');
+const salesPeriod = ref('7d');
 const isLoading = ref(true);
 const isRefreshing = ref(false);
 
@@ -45,6 +47,15 @@ const formatCurrency = (val: number) => {
     }).format(val);
 };
 
+const fetchSalesData = async () => {
+    try {
+        const salesRes = await getDashboardSales(salesPeriod.value);
+        salesOverview.value = salesRes.data.data;
+    } catch (err) {
+        console.error('Failed to fetch sales overview:', err);
+    }
+};
+
 const fetchDashboardData = async (isRefresh = false) => {
     if (isRefresh) {
         isRefreshing.value = true;
@@ -55,7 +66,7 @@ const fetchDashboardData = async (isRefresh = false) => {
     try {
         const [sumRes, salesRes, lowRes, topRes, recentRes] = await Promise.all([
             getDashboardSummary(selectedPeriod.value),
-            getDashboardSales(selectedPeriod.value),
+            getDashboardSales(salesPeriod.value),
             getDashboardLowStock(5),
             getDashboardTopProducts(selectedPeriod.value, 5),
             getDashboardRecentTransactions(5)
@@ -75,7 +86,12 @@ const fetchDashboardData = async (isRefresh = false) => {
 };
 
 watch(selectedPeriod, () => {
+    salesPeriod.value = selectedPeriod.value;
     fetchDashboardData();
+});
+
+watch(salesPeriod, () => {
+    fetchSalesData();
 });
 
 onMounted(() => {
@@ -254,9 +270,32 @@ onMounted(() => {
             </div>
         </div>
 
-        <!-- Row 2 & 3 Placeholders (Will be expanded in Commits 7, 8, 9) -->
-        <div id="dashboard-content-grid" class="flex flex-col gap-6">
-            <!-- Content will be wired in upcoming feature commits -->
+        <!-- Row 2: Sales Overview Chart + Low Stock Placeholder -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Left: Sales Overview Chart (2 cols) -->
+            <div class="lg:col-span-2">
+                <div v-if="isLoading" class="bg-white p-6 rounded-xl border border-surface-200 h-[340px]">
+                    <Skeleton width="40%" height="1.5rem" class="mb-4" />
+                    <Skeleton width="100%" height="220px" />
+                </div>
+                <SalesChart
+                    v-else
+                    :points="salesOverview?.points || []"
+                    :total-sales="salesOverview?.total_sales || 0"
+                    v-model:period="salesPeriod"
+                    :is-loading="isLoading"
+                />
+            </div>
+
+            <!-- Right: Low Stock Card Placeholder (Populated in Commit 8) -->
+            <div class="lg:col-span-1" id="low-stock-placeholder">
+                <div v-if="isLoading" class="bg-white p-6 rounded-xl border border-surface-200 h-[340px]">
+                    <Skeleton width="50%" height="1.5rem" class="mb-4" />
+                    <Skeleton width="100%" height="40px" class="mb-2" />
+                    <Skeleton width="100%" height="40px" class="mb-2" />
+                    <Skeleton width="100%" height="40px" />
+                </div>
+            </div>
         </div>
     </div>
 </template>
