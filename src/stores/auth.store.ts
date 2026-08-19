@@ -5,11 +5,26 @@ import { loginApi, logoutApi, meApi } from "@/api/auth.api";
 
 
 export const useAuthStore = defineStore('auth', {
-    state: () =>({
-        user : null as User | null,
+    state: () => ({
+        user: null as User | null,
         loading: false,
         isAuthenticated: !!localStorage.getItem('token')
     }),
+
+    getters: {
+        userRole: (state): string => state.user?.role || 'CASHIER',
+        isAdmin: (state): boolean => state.user?.role === 'ADMIN',
+        isCashier: (state): boolean => state.user?.role === 'CASHIER',
+        hasRole: (state) => (allowedRoles: string | string[]): boolean => {
+            if (!state.user) return false;
+            const userRole = state.user.role || 'CASHIER';
+            if (Array.isArray(allowedRoles)) {
+                return allowedRoles.includes(userRole);
+            }
+            return userRole === allowedRoles;
+        }
+    },
+
     
     actions:{
         async login(email:string, password:string){
