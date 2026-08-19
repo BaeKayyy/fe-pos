@@ -40,3 +40,11 @@ npm run dev
 ```sh
 npm run build
 ```
+
+## Features Implemented
+- **RBAC (Role-Based Access Control):** ADMIN & CASHIER roles with navigation route guards and role-filtered sidebar.
+- **Stock Monitoring:** Real-time stock levels, low stock threshold monitoring, and status badges.
+- **Stock Adjustment:** Modal dialog for Stock In, Stock Out, and Adjustment with negative stock validation.
+- **Stock History:** Comprehensive movement audit logging (POS checkout, manual adjustments, restocks).
+- **Dashboard Integration:** Live inventory alert notifications and metrics.
+
