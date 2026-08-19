@@ -13,6 +13,10 @@ import POSView from '@/pages/pos/POSView.vue'
 import { useAuthStore } from '@/stores/auth.store'
 import { createRouter, createWebHistory } from 'vue-router'
 
+import Forbidden from '@/pages/auth/Forbidden.vue'
+import StockMonitoring from '@/pages/inventory/StockMonitoring.vue'
+import StockHistory from '@/pages/inventory/StockHistory.vue'
+
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
 
@@ -23,6 +27,14 @@ const router = createRouter({
             component: Login,
             meta: {
                 guest: true
+            }
+        },
+        {
+            path: '/403',
+            name: 'forbidden',
+            component: Forbidden,
+            meta: {
+                requiresAuth: true
             }
         },
         {
@@ -45,32 +57,50 @@ const router = createRouter({
                 {
                     path: '/product-categories',
                     name: 'product-categories',
-                    component: CategoryList
+                    component: CategoryList,
+                    meta: { roles: ['ADMIN'] }
                 },
                 {
                     path: '/product-categories/create',
                     name: 'product-categories-create',
-                    component: CategoryForm
+                    component: CategoryForm,
+                    meta: { roles: ['ADMIN'] }
                 },
                 {
                     path: '/product-categories/:id/edit',
                     name: 'product-categories-edit',
-                    component: CategoryForm
+                    component: CategoryForm,
+                    meta: { roles: ['ADMIN'] }
                 },
                 {
                     path: '/products',
                     name: 'products',
-                    component: ProductList
+                    component: ProductList,
+                    meta: { roles: ['ADMIN'] }
                 },
                 {
                     path: '/products/create',
                     name: 'products-create',
-                    component: ProductForm
+                    component: ProductForm,
+                    meta: { roles: ['ADMIN'] }
                 },
                 {
                     path: '/products/:id/edit',
                     name: 'products-edit',
-                    component: ProductForm
+                    component: ProductForm,
+                    meta: { roles: ['ADMIN'] }
+                },
+                {
+                    path: '/stock-monitoring',
+                    name: 'stock-monitoring',
+                    component: StockMonitoring,
+                    meta: { roles: ['ADMIN'] }
+                },
+                {
+                    path: '/stock-history',
+                    name: 'stock-history',
+                    component: StockHistory,
+                    meta: { roles: ['ADMIN'] }
                 },
                 {
                     path: '/customers',
@@ -128,8 +158,17 @@ router.beforeEach(async (to) => {
         return { name: 'dashboard' }
     }
 
+    // Route level Role Authorization Check
+    const requiredRoles = to.meta.roles as string[] | undefined
+    if (requiredRoles && requiredRoles.length > 0) {
+        if (!auth.hasRole(requiredRoles)) {
+            return { name: 'forbidden' }
+        }
+    }
+
     // Izinkan navigasi
     return true
 })
+
 
 export default router
