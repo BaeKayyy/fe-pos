@@ -18,7 +18,12 @@ import type {
     RecentTransaction
 } from '@/types/dashboard';
 
+import { useAuthStore } from '@/stores/auth.store';
+import { getInventoryAlerts } from '@/api/inventory.api';
+import type { InventoryAlert } from '@/types/inventory';
+
 const router = useRouter();
+const authStore = useAuthStore();
 
 // Filters, Loading & Error State
 const selectedPeriod = ref('today');
@@ -40,6 +45,7 @@ const periodOptions = [
 const summary = ref<DashboardSummary | null>(null);
 const salesOverview = ref<SalesOverview | null>(null);
 const lowStockProducts = ref<LowStockProduct[]>([]);
+const inventoryAlerts = ref<InventoryAlert[]>([]);
 const topProducts = ref<TopProduct[]>([]);
 const recentTransactions = ref<RecentTransaction[]>([]);
 
@@ -54,6 +60,10 @@ const formatCurrency = (val: number) => {
 
 const goToProducts = () => {
     router.push('/products');
+};
+
+const goToStockMonitoring = () => {
+    router.push('/stock-monitoring');
 };
 
 const goToTransactions = () => {
@@ -96,6 +106,15 @@ const fetchDashboardData = async (isRefresh = false) => {
         lowStockProducts.value = lowRes.data.data;
         topProducts.value = topRes.data.data;
         recentTransactions.value = recentRes.data.data;
+
+        if (authStore.isAdmin) {
+            try {
+                const alertsRes = await getInventoryAlerts(5);
+                inventoryAlerts.value = alertsRes.data.data;
+            } catch (e) {
+                console.error('Failed to fetch inventory alerts:', e);
+            }
+        }
     } catch (err: any) {
         console.error('Failed to load dashboard data:', err);
         isError.value = true;
@@ -105,6 +124,7 @@ const fetchDashboardData = async (isRefresh = false) => {
         isRefreshing.value = false;
     }
 };
+
 
 watch(selectedPeriod, () => {
     salesPeriod.value = selectedPeriod.value;
@@ -328,7 +348,7 @@ onMounted(() => {
                 />
             </div>
 
-            <!-- Right: Low Stock Card -->
+            <!-- Right: Inventory Alerts Card -->
             <div class="lg:col-span-1">
                 <div v-if="isLoading" class="bg-white p-6 rounded-xl border border-surface-200 h-[340px] flex flex-col justify-between">
                     <div>
@@ -344,52 +364,64 @@ onMounted(() => {
                     <div>
                         <!-- Header -->
                         <div class="flex items-center justify-between mb-4">
-                            <h3 class="text-base font-semibold text-surface-900">Low Stock</h3>
+                            <div class="flex items-center gap-2">
+                                <h3 class="text-base font-semibold text-surface-900">Inventory Alerts</h3>
+                                <span
+                                    v-if="inventoryAlerts.length > 0"
+                                    class="px-2 py-0.5 text-xs font-bold text-red-700 bg-red-50 border border-red-200 rounded-full"
+                                >
+                                    {{ inventoryAlerts.length }}
+                                </span>
+                            </div>
                             <button
-                                @click="goToProducts"
+                                v-if="authStore.isAdmin"
+                                @click="goToStockMonitoring"
                                 class="text-xs font-semibold text-emerald-600 hover:text-emerald-700 transition-colors flex items-center gap-1 cursor-pointer"
                             >
-                                View all products
+                                Stock Monitoring
                                 <i class="pi pi-chevron-right text-[10px]"></i>
                             </button>
                         </div>
 
-                        <!-- Product List -->
-                        <div v-if="lowStockProducts.length > 0" class="divide-y divide-surface-100">
+                        <!-- Product Alert List -->
+                        <div v-if="inventoryAlerts.length > 0" class="divide-y divide-surface-100">
                             <div
-                                v-for="product in lowStockProducts"
-                                :key="product.id"
+                                v-for="item in inventoryAlerts"
+                                :key="item.product_id"
                                 class="py-3 flex items-center justify-between gap-3 first:pt-0 last:pb-0"
                             >
                                 <div class="flex items-center gap-3 min-w-0">
                                     <div class="w-10 h-10 rounded-lg bg-surface-100 border border-surface-200 overflow-hidden flex-shrink-0 flex items-center justify-center">
                                         <img
-                                            v-if="product.image"
-                                            :src="product.image"
-                                            :alt="product.name"
+                                            v-if="item.image"
+                                            :src="item.image"
+                                            :alt="item.product_name"
                                             class="w-full h-full object-cover"
                                         />
                                         <i v-else class="pi pi-box text-surface-400 text-lg"></i>
                                     </div>
                                     <div class="min-w-0">
                                         <div class="text-sm font-medium text-surface-900 truncate">
-                                            {{ product.name }}
+                                            {{ item.product_name }}
                                         </div>
                                         <div class="text-xs text-surface-400 truncate">
-                                            {{ product.category_name || 'General' }}
+                                            {{ item.category_name || 'General' }}
                                         </div>
                                     </div>
                                 </div>
 
                                 <div class="flex-shrink-0 text-right">
                                     <span
-                                        v-if="product.stock === 0"
+                                        v-if="item.status === 'out_of_stock'"
                                         class="px-2 py-0.5 text-xs font-semibold text-red-600 bg-red-50 rounded"
                                     >
                                         Out of stock
                                     </span>
-                                    <span v-else class="text-sm font-bold text-surface-900">
-                                        {{ product.stock }}
+                                    <span
+                                        v-else
+                                        class="px-2 py-0.5 text-xs font-semibold text-amber-700 bg-amber-50 rounded"
+                                    >
+                                        Stock: {{ item.stock }}
                                     </span>
                                 </div>
                             </div>
@@ -401,11 +433,12 @@ onMounted(() => {
                                 <i class="pi pi-check-circle text-xl"></i>
                             </div>
                             <div class="text-sm font-semibold text-surface-900">All stocks healthy</div>
-                            <p class="text-xs text-surface-400 mt-1">No products below threshold</p>
+                            <p class="text-xs text-surface-400 mt-1">No products below low stock threshold</p>
                         </div>
                     </div>
                 </div>
             </div>
+
         </div>
 
         <!-- Row 3: Recent Transactions + Top Products -->
