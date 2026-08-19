@@ -69,12 +69,13 @@ const fetchProductsList = async () => {
 
         // Apply client-side stock status filter if selected
         if (statusFilter.value === 'IN_STOCK') {
-            data = data.filter(p => p.stock > (p.low_stock_threshold ?? 10));
+            data = data.filter((p: Product) => p.stock > (p.low_stock_threshold ?? 10));
         } else if (statusFilter.value === 'LOW_STOCK') {
-            data = data.filter(p => p.stock > 0 && p.stock <= (p.low_stock_threshold ?? 10));
+            data = data.filter((p: Product) => p.stock > 0 && p.stock <= (p.low_stock_threshold ?? 10));
         } else if (statusFilter.value === 'OUT_OF_STOCK') {
-            data = data.filter(p => p.stock <= 0);
+            data = data.filter((p: Product) => p.stock <= 0);
         }
+
 
         products.value = data;
         totalPages.value = res.data.data.meta.last_page || 1;
