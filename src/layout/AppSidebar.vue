@@ -2,43 +2,57 @@
 import router from '@/router';
 import { useAuthStore } from '@/stores/auth.store';
 import { Button, Dialog } from 'primevue';
-
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useRoute } from 'vue-router';
 
-const authStore = useAuthStore()
-const { user } = authStore
+const authStore = useAuthStore();
+const logoutDialog = ref(false);
 
-const logoutDialog = ref (false)
-const handleLogout = async ()=>{
-    await authStore.logout()
-    logoutDialog.value = false
-    router.push({ name: 'login'})
-}
+const handleLogout = async () => {
+    await authStore.logout();
+    logoutDialog.value = false;
+    router.push({ name: 'login' });
+};
 
-const route =useRoute();
+const route = useRoute();
 
-const menuItems =ref([
-    {
-        label: "General",
-        items:[
-            { icon: "pi pi-th-large", to:"/", label:"Dashboard"},
-            { icon: "pi pi-shopping-cart", to:"/pos", label:"POS"}
-        ]
-    },
-    {
-        label: "Management",
-        items: [
-             { icon: "pi pi-box", to:"/products", label:"Products"},
-             { icon: "pi pi-tag", to:"/product-categories", label:"Product Categories"},
-             { icon: "pi pi-users", to:"/customers", label:"Customers"},
-             { icon: "pi pi-receipt", to:"/transactions", label:"Transactions"}
-        ]
+const menuItems = computed(() => {
+    const isAdmin = authStore.isAdmin;
+
+    const sections = [
+        {
+            label: "General",
+            items: [
+                { icon: "pi pi-th-large", to: "/", label: "Dashboard" },
+                { icon: "pi pi-shopping-cart", to: "/pos", label: "POS" }
+            ]
+        },
+        {
+            label: "Management",
+            items: [
+                ...(isAdmin ? [
+                    { icon: "pi pi-box", to: "/products", label: "Products" },
+                    { icon: "pi pi-tag", to: "/product-categories", label: "Product Categories" }
+                ] : []),
+                { icon: "pi pi-users", to: "/customers", label: "Customers" },
+                { icon: "pi pi-receipt", to: "/transactions", label: "Transactions" }
+            ]
+        }
+    ];
+
+    if (isAdmin) {
+        sections.push({
+            label: "Inventory",
+            items: [
+                { icon: "pi pi-chart-bar", to: "/stock-monitoring", label: "Stock Monitoring" },
+                { icon: "pi pi-history", to: "/stock-history", label: "Stock History" }
+            ]
+        });
     }
-]);
 
+    return sections;
+});
 </script>
-
 
 <template>
     <div class="fixed left-0 top-0 h-full w-64 bg-white border-r border-surface-200 flex flex-col z-50 transition-all duration-300">
@@ -59,7 +73,7 @@ const menuItems =ref([
                 </div>
                 
                 <div class="flex flex-col gap-1">
-                    <router-link v-for="(item, j) in section.items" :to ="item.to" :key="j"
+                    <router-link v-for="(item, j) in section.items" :to="item.to" :key="j"
                     class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors duration-200" :class="[
                         (item.to === '/' ? route.path === '/' : route.path.startsWith(item.to)) ? 'bg-surface-100 text-primary-600 font-semibold' : 'text-surface-900 hover:bg-surface-100'
                     ]">
@@ -69,26 +83,36 @@ const menuItems =ref([
                 </div>
             </div>
         </div>
+
         <!-- User Profile-->
         <div class="p-4 border-t border-surface-200">
             <button @click="logoutDialog = true" class="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-surface-50">
-                <div class="w-9 h-9 rounded-full bg-surface-200 flex items-center justify-center overflow-hidden">
+                <div class="w-9 h-9 rounded-full bg-surface-200 flex items-center justify-center overflow-hidden flex-shrink-0">
                     <i class="pi pi-user text-lg text-surface-600"></i>
                 </div>
-                <div class="text-left">
-                    <div class="text-sm font-semibold text-surface-900">
-                        {{ user?.name }}
+                <div class="text-left min-w-0 flex-1">
+                    <div class="text-sm font-semibold text-surface-900 truncate">
+                        {{ authStore.user?.name }}
                     </div>
-                    <div class="text-xs text-surface-500">
-                        {{ user?.email }}
+                    <div class="text-xs text-surface-500 truncate">
+                        {{ authStore.user?.email }}
+                    </div>
+                    <div class="mt-1">
+                        <span :class="[
+                            'text-[10px] font-bold px-1.5 py-0.5 rounded tracking-wide uppercase',
+                            authStore.isAdmin ? 'bg-purple-100 text-purple-700 border border-purple-200' : 'bg-blue-100 text-blue-700 border border-blue-200'
+                        ]">
+                            {{ authStore.userRole }}
+                        </span>
                     </div>
                 </div>
-                <div class="ml-auto w-8-h8 rounded-lg flex items-center justify-center text-surface-400 group-hover:bg-red-50 group-hover:text--red-600 transition-colors">
+                <div class="ml-auto w-8 h-8 rounded-lg flex items-center justify-center text-surface-400 hover:bg-red-50 hover:text-red-600 transition-colors flex-shrink-0">
                     <i class="pi pi-sign-out text-lg"></i>
                 </div>
             </button>
         </div>
     </div>
+
     <Dialog v-model:visible="logoutDialog" header="Confirm Logout" :modal="true" class="w-100 ">
         <span class="text-surface-500 block mb-8">Are you sure to Logout</span>
         <div class="flex justify-end gap-2">
