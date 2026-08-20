@@ -16,6 +16,11 @@ import { createRouter, createWebHistory } from 'vue-router'
 import Forbidden from '@/pages/auth/Forbidden.vue'
 import StockMonitoring from '@/pages/inventory/StockMonitoring.vue'
 import StockHistory from '@/pages/inventory/StockHistory.vue'
+import SupplierList from '@/pages/suppliers/SupplierList.vue'
+import SupplierForm from '@/pages/suppliers/SupplierForm.vue'
+import PurchaseList from '@/pages/purchases/PurchaseList.vue'
+import PurchaseForm from '@/pages/purchases/PurchaseForm.vue'
+import PurchaseDetail from '@/pages/purchases/PurchaseDetail.vue'
 
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
@@ -88,6 +93,42 @@ const router = createRouter({
                     path: '/products/:id/edit',
                     name: 'products-edit',
                     component: ProductForm,
+                    meta: { roles: ['ADMIN'] }
+                },
+                {
+                    path: '/suppliers',
+                    name: 'suppliers',
+                    component: SupplierList,
+                    meta: { roles: ['ADMIN'] }
+                },
+                {
+                    path: '/suppliers/create',
+                    name: 'suppliers-create',
+                    component: SupplierForm,
+                    meta: { roles: ['ADMIN'] }
+                },
+                {
+                    path: '/suppliers/:id/edit',
+                    name: 'suppliers-edit',
+                    component: SupplierForm,
+                    meta: { roles: ['ADMIN'] }
+                },
+                {
+                    path: '/purchases',
+                    name: 'purchases',
+                    component: PurchaseList,
+                    meta: { roles: ['ADMIN'] }
+                },
+                {
+                    path: '/purchases/create',
+                    name: 'purchases-create',
+                    component: PurchaseForm,
+                    meta: { roles: ['ADMIN'] }
+                },
+                {
+                    path: '/purchases/:id',
+                    name: 'purchases-detail',
+                    component: PurchaseDetail,
                     meta: { roles: ['ADMIN'] }
                 },
                 {

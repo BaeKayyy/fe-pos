@@ -32,7 +32,9 @@ const menuItems = computed(() => {
             items: [
                 ...(isAdmin ? [
                     { icon: "pi pi-box", to: "/products", label: "Products" },
-                    { icon: "pi pi-tag", to: "/product-categories", label: "Product Categories" }
+                    { icon: "pi pi-tag", to: "/product-categories", label: "Product Categories" },
+                    { icon: "pi pi-truck", to: "/suppliers", label: "Suppliers" },
+                    { icon: "pi pi-shopping-bag", to: "/purchases", label: "Purchases" }
                 ] : []),
                 { icon: "pi pi-users", to: "/customers", label: "Customers" },
                 { icon: "pi pi-receipt", to: "/transactions", label: "Transactions" }
